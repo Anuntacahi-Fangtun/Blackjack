@@ -80,14 +80,11 @@ window.addEventListener('DOMContentLoaded', () => {
 function showCertOnly(name) {
   curName = name;
   show('cert');
-  document.querySelectorAll('#cert .noprint button').forEach(btn => {
-    if(btn.id !== 'dl') btn.style.display = 'none';
-  });
-  $('cn').textContent = name;
-  $('cd').textContent = 'วันที่ ' + new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+  // ซ่อนกล่องพรีวิว HTML ด้านบนออก ป้องกันการแสดงผลซ้ำซ้อน
+  const certBoxEl = $('certBox');
+  if(certBoxEl) certBoxEl.style.display = 'none';
+  
   $('dlMsg').textContent = 'นี่คือเกียรติบัตรยืนยันความสำเร็จของคุณ กดปุ่มด้านล่างเพื่อบันทึกรูปภาพได้เลยครับ';
-  const qrBox = $('qr').parentElement;
-  if(qrBox) qrBox.style.display = 'none';
 }
 
 async function cert(name){
@@ -97,60 +94,79 @@ async function cert(name){
  $('cd').textContent = dateStr;
  show('cert');
 
+ // ซ่อนกล่องพรีวิว HTML ด้านบน (แก้ปัญหาแสดงผลซ้ำซ้อน 2 อัน)
+ const certBoxEl = $('certBox');
+ if(certBoxEl) certBoxEl.style.display = 'none';
+
  try {
   const W=1400, H=990, c=document.createElement('canvas');
   c.width=W; c.height=H; 
   const x=c.getContext('2d');
   
+  // พื้นหลังและกรอบหรูหรา
   x.fillStyle='#f8fbff'; x.fillRect(0,0,W,H);
   x.strokeStyle='#0b6a8a'; x.lineWidth=14; x.strokeRect(20,20,W-40,H-40);
   x.strokeStyle='#ff3df2'; x.lineWidth=3; x.strokeRect(50,50,W-100,H-100);
   
+  // วาดโลโก้ตราสัญลักษณ์อวกาศด้านบนสุด
+  x.save();
+  x.translate(W/2, 110);
+  x.fillStyle='#0b6a8a';
+  x.beginPath();
+  x.arc(0, 0, 32, 0, Math.PI * 2);
+  x.fill();
+  x.strokeStyle='#ff3df2';
+  x.lineWidth=4;
+  x.stroke();
+  // วาดดาวด้านในโลโก้
+  x.fillStyle='#fff';
+  x.font="32px sans-serif";
   x.textAlign='center';
-  x.fillStyle='#2b3a66'; x.font="400 34px Prompt,sans-serif"; x.fillText('สถานีอวกาศแบล็กแจ็ก',W/2,170);
-  x.fillStyle='#0b6a8a'; x.font="600 120px Prompt,sans-serif"; x.fillText('เกียรติบัตร',W/2,310);
-  x.fillStyle='#2b3a66'; x.font="400 38px Prompt,sans-serif"; x.fillText('ขอมอบให้',W/2,420);
+  x.textBaseline='middle';
+  x.fillText('★', 0, 0);
+  x.restore();
+
+  // ข้อความหัวเรื่อง
+  x.textAlign='center';
+  x.fillStyle='#2b3a66'; x.font="400 28px Prompt,sans-serif"; x.fillText('สถานีอวกาศแบล็กแจ็ก',W/2,175);
+  x.fillStyle='#0b6a8a'; x.font="600 88px Prompt,sans-serif"; x.fillText('เกียรติบัตร',W/2,275);
+  x.fillStyle='#2b3a66'; x.font="400 36px Prompt,sans-serif"; x.fillText('ขอมอบให้',W/2,370);
   
-  let fs=96; x.fillStyle='#0a1030'; x.font='600 '+fs+'px Prompt,sans-serif';
+  // ชื่อผู้เล่น
+  let fs=88; x.fillStyle='#0a1030'; x.font='600 '+fs+'px Prompt,sans-serif';
   while(x.measureText(curName).width>W-300 && fs>30){fs-=4; x.font='600 '+fs+'px Prompt,sans-serif';}
-  x.fillText(curName,W/2,540);
+  x.fillText(curName,W/2,485);
   
   const nw=Math.min(x.measureText(curName).width+80, W-200);
-  x.fillStyle='#0b6a8a'; x.fillRect(W/2-nw/2,565,nw,4);
+  x.fillStyle='#0b6a8a'; x.fillRect(W/2-nw/2,510,nw,4);
   
-  x.fillStyle='#2b3a66'; x.font="400 36px Prompt,sans-serif";
-  x.fillText('เพื่อแสดงว่าเป็นผู้ชนะบอทดีลเลอร์ในเกมแบล็กแจ็ก',W/2,670);
-  x.fillText('และได้รับยศนักบินอวกาศผู้เชี่ยวชาญแต้ม 21',W/2,725);
+  // รายละเอียดคำอธิบาย
+  x.fillStyle='#2b3a66'; x.font="400 34px Prompt,sans-serif";
+  x.fillText('เพื่อแสดงว่าเป็นผู้ชนะบอทดีลเลอร์ในเกมแบล็กแจ็ก',W/2,610);
+  x.fillText('และได้รับยศนักบินอวกาศผู้เชี่ยวชาญแต้ม 21',W/2,665);
   
-  x.textAlign='left'; x.font="400 34px Prompt,sans-serif"; 
-  x.fillText(dateStr,120,H-120);
+  // วันที่ออกเกียรติบัตร
+  x.textAlign='left'; x.font="400 32px Prompt,sans-serif"; 
+  x.fillText(dateStr, 120, H-110);
 
-  const verifyUrl = window.location.origin + window.location.pathname + '?cert=' + encodeURIComponent(name);
-
-  $('qr').innerHTML='';
-  new QRCode($('qr'), {
-    text: verifyUrl,
-    width: 184,
-    height: 184,
-    colorDark: '#0a1030',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M
-  });
-
+  // สร้างภาพ PNG จาก Canvas สำหรับแสดงผลและดาวน์โหลด
   const imageUrl = c.toDataURL('image/png');
   let im=$('certImg');
   if(!im){
     im=document.createElement('img'); im.id='certImg'; im.alt='เกียรติบัตร'; 
-    im.style.cssText='width:100%;max-width:560px;border-radius:6px;margin-top:10px'; 
+    im.style.cssText='width:100%;max-width:760px;border-radius:8px;margin-top:10px;box-shadow:0 0 30px #27f0ff44'; 
     $('dlMsg').after(im);
   }
   im.src = imageUrl;
-  $('dlMsg').textContent = 'สร้าง QR Code สำเร็จ! สแกนเพื่อตรวจสอบเกียรติบัตร และกดดาวน์โหลดรูปด้านล่างได้เลย';
+  $('dlMsg').textContent = 'สร้างเกียรติบัตรสำเร็จ! กดปุ่มดาวน์โหลดด้านล่างเพื่อเก็บบันทึกรูปภาพได้ทันที';
+
+  // ซ่อนช่อง QR Code เดิมทิ้งไปเลย
+  const qrBox = $('qr');
+  if(qrBox) qrBox.parentElement.style.display = 'none';
 
  } catch(e) {
   console.error(e);
-  $('qr').textContent = 'QR Error';
- }
+}
 }
 
 /* ===== เสียง (Web Audio) ===== */
@@ -215,6 +231,7 @@ $('quit').onclick=()=>show('bye');
 $('home').onclick=()=>{history.replaceState(null,'',location.pathname+location.search);show('start')};
 $('pr').onclick=()=>{try{window.print()}catch(e){}};
 
+// ฟังก์ชันดาวน์โหลดภาพเกียรติบัตรที่ปรับแต่งให้สะอาดและคมชัด
 $('dl').onclick=async()=>{
  const m=$('dlMsg');
  try{
@@ -225,31 +242,33 @@ $('dl').onclick=async()=>{
   x.strokeStyle='#0b6a8a';x.lineWidth=14;x.strokeRect(20,20,W-40,H-40);
   x.strokeStyle='#ff3df2';x.lineWidth=3;x.strokeRect(50,50,W-100,H-100);
   
+  // โลโก้ตราสัญลักษณ์บน Canvas ดาวน์โหลด
+  x.save();
+  x.translate(W/2, 110);
+  x.fillStyle='#0b6a8a';
+  x.beginPath(); x.arc(0, 0, 32, 0, Math.PI * 2); x.fill();
+  x.strokeStyle='#ff3df2'; x.lineWidth=4; x.stroke();
+  x.fillStyle='#fff'; x.font="32px sans-serif"; x.textAlign='center'; x.textBaseline='middle';
+  x.fillText('★', 0, 0);
+  x.restore();
+
   x.textAlign='center';
-  x.fillStyle='#2b3a66';x.font="400 34px Prompt,sans-serif";x.fillText('สถานีอวกาศแบล็กแจ็ก',W/2,170);
-  x.fillStyle='#0b6a8a';x.font="600 120px Prompt,sans-serif";x.fillText('เกียรติบัตร',W/2,310);
-  x.fillStyle='#2b3a66';x.font="400 38px Prompt,sans-serif";x.fillText('ขอมอบให้',W/2,420);
+  x.fillStyle='#2b3a66';x.font="400 28px Prompt,sans-serif";x.fillText('สถานีอวกาศแบล็กแจ็ก',W/2,175);
+  x.fillStyle='#0b6a8a';x.font="600 88px Prompt,sans-serif";x.fillText('เกียรติบัตร',W/2,275);
+  x.fillStyle='#2b3a66';x.font="400 36px Prompt,sans-serif";x.fillText('ขอมอบให้',W/2,370);
   
-  let fs=96;x.fillStyle='#0a1030';x.font='600 '+fs+'px Prompt,sans-serif';
+  let fs=88;x.fillStyle='#0a1030';x.font='600 '+fs+'px Prompt,sans-serif';
   while(x.measureText(curName).width>W-300&&fs>30){fs-=4;x.font='600 '+fs+'px Prompt,sans-serif'}
-  x.fillText(curName,W/2,540);
+  x.fillText(curName,W/2,485);
   
   const nw=Math.min(x.measureText(curName).width+80,W-200);
-  x.fillStyle='#0b6a8a';x.fillRect(W/2-nw/2,565,nw,4);
+  x.fillStyle='#0b6a8a';x.fillRect(W/2-nw/2,510,nw,4);
   
-  x.fillStyle='#2b3a66';x.font="400 36px Prompt,sans-serif";
-  x.fillText('เพื่อแสดงว่าเป็นผู้ชนะบอทดีลเลอร์ในเกมแบล็กแจ็ก',W/2,670);
-  x.fillText('และได้รับยศนักบินอวกาศผู้เชี่ยวชาญแต้ม 21',W/2,725);
+  x.fillStyle='#2b3a66';x.font="400 34px Prompt,sans-serif";
+  x.fillText('เพื่อแสดงว่าเป็นผู้ชนะบอทดีลเลอร์ในเกมแบล็กแจ็ก',W/2,610);
+  x.fillText('และได้รับยศนักบินอวกาศผู้เชี่ยวชาญแต้ม 21',W/2,665);
   
-  x.textAlign='left';x.font="400 34px Prompt,sans-serif";x.fillText($('cd').textContent,120,H-120);
-  
-  const q=$('qr').querySelector('canvas');
-  if(q&&q.parentElement.style.display!=='none'){
-    x.fillStyle='#fff'; 
-    x.fillRect(W-340, H-340, 220, 220); 
-    x.imageSmoothingEnabled=false; 
-    x.drawImage(q, W-330, H-330, 200, 200); 
-  }
+  x.textAlign='left';x.font="400 32px Prompt,sans-serif";x.fillText($('cd').textContent,120,H-110);
   
   const dataUrl=c.toDataURL('image/png');
   const link=document.createElement('a');
