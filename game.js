@@ -1,11 +1,13 @@
 const $=id=>document.getElementById(id);
 const SU=['♠','♥','♦','♣'],RK=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 let deck=[],P=[],D=[],hide=true,over=true;
+
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));window.scrollTo(0,0)}
 function mk(){deck=[];SU.forEach(s=>RK.forEach(r=>deck.push({s,r})));for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}}
 function val(h){let t=0,a=0;h.forEach(c=>{if(c.r==='A'){a++;t+=11}else t+=['J','Q','K'].includes(c.r)?10:+c.r});while(t>21&&a){t-=10;a--}return t}
 function cardEl(c,back){const d=document.createElement('div');if(back){d.className='card back';d.textContent='?';return d}
 d.className='card'+(c.s==='♥'||c.s==='♦'?' red':'');d.innerHTML='<span>'+c.r+'</span><span class="s">'+c.s+'</span><span class="r2">'+c.r+'</span>';return d}
+
 let shownP=99,shownD=99;
 function sync(box,cards,hideIdx){
  while(box.children.length>cards.length)box.lastChild.remove();
@@ -26,18 +28,22 @@ function sync(box,cards,hideIdx){
   }
  });
 }
+
 function draw(){
  const p=P.slice(0,shownP),d=D.slice(0,shownD);
  sync($('ph'),p,-1);sync($('dh'),d,hide?1:-1);
  $('ps').textContent=val(p);$('ds').textContent=hide?(d.length?'?':'0'):val(d);
 }
+
 function setBtn(on){$('hit').disabled=!on;$('stand').disabled=!on}
+
 function deal(){
  mk();P=[deck.pop(),deck.pop()];D=[deck.pop(),deck.pop()];hide=true;over=true;shownP=0;shownD=0;
  $('ph').innerHTML='';$('dh').innerHTML='';$('status').textContent='กำลังแจกไพ่...';setBtn(false);show('game');draw();
  [['P',1],['D',1],['P',2],['D',2]].forEach((s,i)=>setTimeout(()=>{if(s[0]==='P')shownP=s[1];else shownD=s[1];draw();sfx.card()},450+i*600));
  setTimeout(()=>{over=false;$('status').textContent='ตาของคุณ: จั่วหรือหยุด?';setBtn(true);if(val(P)===21)stand()},450+4*600);
 }
+
 function finish(res,msg){
  over=true;hide=false;draw();setBtn(false);$('status').textContent=msg;
  setTimeout(()=>sfx[res](),200);
@@ -47,8 +53,10 @@ function finish(res,msg){
   else show('draw');
  },1600);
 }
+
 function hit(){if(over)return;shownP = Math.min(shownP + 1, P.length);P.push(deck.pop());shownP = P.length;draw();sfx.card();const v=val(P);
  if(v>21)finish('lose','แต้มของคุณ '+v+' เกิน 21 คุณแพ้!');else if(v===21)stand()}
+
 function stand(){if(over)return;setBtn(false);over=true;hide=false;shownD = D.length;draw();$('status').textContent='บอทกำลังเล่น...';
  (function step(){
   if(val(D)<17){setTimeout(()=>{D.push(deck.pop());shownD = D.length;draw();sfx.card();step()},800);return}
@@ -59,9 +67,30 @@ function stand(){if(over)return;setBtn(false);over=true;hide=false;shownD = D.le
   else finish('draw','เสมอกัน '+p+' แต้ม');
  })()}
 
-function enc(s){return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
-
 let curName='';
+
+// รองรับการสแกน QR Code เปิดเข้ามาจากมือถือเครื่องอื่น
+window.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const certName = urlParams.get('cert');
+  if (certName) {
+    showCertOnly(decodeURIComponent(certName));
+  }
+});
+
+function showCertOnly(name) {
+  curName = name;
+  show('cert');
+  document.querySelectorAll('#cert .noprint button').forEach(btn => {
+    if(btn.id !== 'dl') btn.style.display = 'none';
+  });
+  $('cn').textContent = name;
+  $('cd').textContent = 'วันที่ ' + new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+  $('dlMsg').textContent = 'นี่คือเกียรติบัตรยืนยันความสำเร็จของคุณ กดปุ่มด้านล่างเพื่อบันทึกรูปภาพได้เลยครับ';
+  const qrBox = $('qr').parentElement;
+  if(qrBox) qrBox.style.display = 'none';
+}
+
 async function cert(name){
  curName=name;
  $('cn').textContent=name;
@@ -70,19 +99,55 @@ async function cert(name){
  show('cert');
 
  try {
-  // สร้าง URL สำหรับให้ QR Code สแกนแล้วเปิดหน้าเว็บยืนยันเกียรติบัตรได้อย่างเสถียร ไม่เกิด QR Error
-  const certUrl = window.location.origin + window.location.pathname + '#c' + enc(name);
+  const W=1400, H=990, c=document.createElement('canvas');
+  c.width=W; c.height=H; 
+  const x=c.getContext('2d');
+  
+  x.fillStyle='#f8fbff'; x.fillRect(0,0,W,H);
+  x.strokeStyle='#0b6a8a'; x.lineWidth=14; x.strokeRect(20,20,W-40,H-40);
+  x.strokeStyle='#ff3df2'; x.lineWidth=3; x.strokeRect(50,50,W-100,H-100);
+  
+  x.textAlign='center';
+  x.fillStyle='#2b3a66'; x.font="400 34px Prompt,sans-serif"; x.fillText('สถานีอวกาศแบล็กแจ็ก',W/2,170);
+  x.fillStyle='#0b6a8a'; x.font="600 120px Prompt,sans-serif"; x.fillText('เกียรติบัตร',W/2,310);
+  x.fillStyle='#2b3a66'; x.font="400 38px Prompt,sans-serif"; x.fillText('ขอมอบให้',W/2,420);
+  
+  let fs=96; x.fillStyle='#0a1030'; x.font='600 '+fs+'px Prompt,sans-serif';
+  while(x.measureText(curName).width>W-300 && fs>30){fs-=4; x.font='600 '+fs+'px Prompt,sans-serif';}
+  x.fillText(curName,W/2,540);
+  
+  const nw=Math.min(x.measureText(curName).width+80, W-200);
+  x.fillStyle='#0b6a8a'; x.fillRect(W/2-nw/2,565,nw,4);
+  
+  x.fillStyle='#2b3a66'; x.font="400 36px Prompt,sans-serif";
+  x.fillText('เพื่อแสดงว่าเป็นผู้ชนะบอทดีลเลอร์ในเกมแบล็กแจ็ก',W/2,670);
+  x.fillText('และได้รับยศนักบินอวกาศผู้เชี่ยวชาญแต้ม 21',W/2,725);
+  
+  x.textAlign='left'; x.font="400 34px Prompt,sans-serif"; 
+  x.fillText(dateStr,120,H-120);
+
+  const imageUrl = c.toDataURL('image/png');
+  const verifyUrl = window.location.origin + window.location.pathname + '?cert=' + encodeURIComponent(name);
 
   $('qr').innerHTML='';
   new QRCode($('qr'), {
-    text: certUrl,
+    text: verifyUrl,
     width: 184,
     height: 184,
     colorDark: '#0a1030',
     colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.M
   });
-  $('dlMsg').textContent = 'สร้าง QR Code สำเร็จ! สแกนด้วยมือถือเพื่อตรวจสอบเกียรติบัตรออนไลน์';
+
+  let im=$('certImg');
+  if(!im){
+    im=document.createElement('img'); im.id='certImg'; im.alt='เกียรติบัตร'; 
+    im.style.cssText='width:100%;max-width:560px;border-radius:6px;margin-top:10px'; 
+    $('dlMsg').after(im);
+  }
+  im.src = imageUrl;
+  $('dlMsg').textContent = 'สร้าง QR Code สำเร็จ! สแกนเพื่อตรวจสอบเกียรติบัตร และกดดาวน์โหลดรูปด้านล่างได้เลย';
+
  } catch(e) {
   console.error(e);
   $('qr').textContent = 'QR Error';
@@ -136,15 +201,21 @@ const sfx={
  lose(){[400,320,250,160].forEach((f,i)=>tone(f,.4,'sawtooth',.25,f*.8,i*.2))},
  draw(){tone(440,.25,'triangle',.4,0,0);tone(440,.25,'triangle',.4,0,.3)}
 };
+
 document.addEventListener('click',e=>{initAudio();if(e.target.closest('.btn'))sfx.click()});
 $('snd').onclick=()=>{
  muted=!muted;if(master)master.gain.value=muted?0:1;
  $('snd').textContent=muted?'🔇 เสียง: ปิด':'🔊 เสียง: เปิด';
 };
-$('startBtn').onclick=deal;$('hit').onclick=hit;$('stand').onclick=stand;
+
+$('startBtn').onclick=deal;
+$('hit').onclick=hit;
+$('stand').onclick=stand;
 $('again1').onclick=$('again2').onclick=$('again3').onclick=deal;
-$('quit').onclick=()=>show('bye');$('home').onclick=()=>{history.replaceState(null,'',location.pathname+location.search);show('start')};
+$('quit').onclick=()=>show('bye');
+$('home').onclick=()=>{history.replaceState(null,'',location.pathname+location.search);show('start')};
 $('pr').onclick=()=>{try{window.print()}catch(e){}};
+
 $('dl').onclick=async()=>{
  const m=$('dlMsg');
  try{
@@ -167,15 +238,20 @@ $('dl').onclick=async()=>{
   x.fillText('และได้รับยศนักบินอวกาศผู้เชี่ยวชาญแต้ม 21',W/2,725);
   x.textAlign='left';x.font="400 34px Prompt,sans-serif";x.fillText($('cd').textContent,120,H-120);
   const q=$('qr').querySelector('canvas');
-  if(q){x.fillStyle='#fff';x.fillRect(W-360,H-360,240,240);x.imageSmoothingEnabled=false;x.drawImage(q,W-350,H-350,220,220)}
+  if(q&&q.parentElement.style.display!=='none'){x.fillStyle='#fff';x.fillRect(W-360,H-360,240,240);x.imageSmoothingEnabled=false;x.drawImage(q,W-350,H-350,220,220)}
   
-  let im=$('certImg');if(!im){im=document.createElement('img');im.id='certImg';im.alt='เกียรติบัตร';im.style.cssText='width:100%;max-width:560px;border-radius:6px;margin-top:10px';m.after(im)}
-  im.src=c.toDataURL('image/png');
-  m.textContent='กดค้างที่รูปภาพด้านล่างเพื่อบันทึกรูปภาพเกียรติบัตร';
+  const dataUrl=c.toDataURL('image/png');
+  const link=document.createElement('a');
+  link.download=`Blackjack-Certificate-${curName.replace(/\s+/g,'_')}.png`;
+  link.href=dataUrl;
+  link.click();
+  
+  m.textContent='ดาวน์โหลดรูปภาพเกียรติบัตรสำเร็จ!';
  }catch(e){
-  m.textContent='บันทึกไม่สำเร็จ ลองใช้วิธีแคปหน้าจอแทนได้ครับ';
+  m.textContent='ไม่สามารถดาวน์โหลดอัตโนมัติได้ ลองใช้วิธีกดค้างที่รูปภาพเพื่อบันทึกแทนได้ครับ';
  }
 };
+
 $('mk').onclick=()=>{
  const f=$('fn').value.trim(),l=$('ln').value.trim();
  if(!f||!l){$('err').textContent='กรุณากรอกทั้งชื่อและนามสกุล';return}
