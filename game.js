@@ -69,7 +69,6 @@ function stand(){if(over)return;setBtn(false);over=true;hide=false;shownD = D.le
 
 let curName='';
 
-// รองรับการสแกน QR Code เปิดเข้ามาจากมือถือเครื่องอื่น
 window.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const certName = urlParams.get('cert');
@@ -126,7 +125,6 @@ async function cert(name){
   x.textAlign='left'; x.font="400 34px Prompt,sans-serif"; 
   x.fillText(dateStr,120,H-120);
 
-  const imageUrl = c.toDataURL('image/png');
   const verifyUrl = window.location.origin + window.location.pathname + '?cert=' + encodeURIComponent(name);
 
   $('qr').innerHTML='';
@@ -139,6 +137,7 @@ async function cert(name){
     correctLevel: QRCode.CorrectLevel.M
   });
 
+  const imageUrl = c.toDataURL('image/png');
   let im=$('certImg');
   if(!im){
     im=document.createElement('img'); im.id='certImg'; im.alt='เกียรติบัตร'; 
@@ -221,24 +220,36 @@ $('dl').onclick=async()=>{
  try{
   try{await document.fonts.load('600 40px Prompt','ก')}catch(e){}
   const W=1400,H=990,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+  
   x.fillStyle='#f8fbff';x.fillRect(0,0,W,H);
   x.strokeStyle='#0b6a8a';x.lineWidth=14;x.strokeRect(20,20,W-40,H-40);
   x.strokeStyle='#ff3df2';x.lineWidth=3;x.strokeRect(50,50,W-100,H-100);
+  
   x.textAlign='center';
   x.fillStyle='#2b3a66';x.font="400 34px Prompt,sans-serif";x.fillText('สถานีอวกาศแบล็กแจ็ก',W/2,170);
   x.fillStyle='#0b6a8a';x.font="600 120px Prompt,sans-serif";x.fillText('เกียรติบัตร',W/2,310);
   x.fillStyle='#2b3a66';x.font="400 38px Prompt,sans-serif";x.fillText('ขอมอบให้',W/2,420);
+  
   let fs=96;x.fillStyle='#0a1030';x.font='600 '+fs+'px Prompt,sans-serif';
   while(x.measureText(curName).width>W-300&&fs>30){fs-=4;x.font='600 '+fs+'px Prompt,sans-serif'}
   x.fillText(curName,W/2,540);
+  
   const nw=Math.min(x.measureText(curName).width+80,W-200);
   x.fillStyle='#0b6a8a';x.fillRect(W/2-nw/2,565,nw,4);
+  
   x.fillStyle='#2b3a66';x.font="400 36px Prompt,sans-serif";
   x.fillText('เพื่อแสดงว่าเป็นผู้ชนะบอทดีลเลอร์ในเกมแบล็กแจ็ก',W/2,670);
   x.fillText('และได้รับยศนักบินอวกาศผู้เชี่ยวชาญแต้ม 21',W/2,725);
+  
   x.textAlign='left';x.font="400 34px Prompt,sans-serif";x.fillText($('cd').textContent,120,H-120);
+  
   const q=$('qr').querySelector('canvas');
-  if(q&&q.parentElement.style.display!=='none'){x.fillStyle='#fff';x.fillRect(W-360,H-360,240,240);x.imageSmoothingEnabled=false;x.drawImage(q,W-350,H-350,220,220)}
+  if(q&&q.parentElement.style.display!=='none'){
+    x.fillStyle='#fff'; 
+    x.fillRect(W-340, H-340, 220, 220); 
+    x.imageSmoothingEnabled=false; 
+    x.drawImage(q, W-330, H-330, 200, 200); 
+  }
   
   const dataUrl=c.toDataURL('image/png');
   const link=document.createElement('a');
