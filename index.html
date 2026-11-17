@@ -5,10 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>แบล็กแจ็ก: ภารกิจดาวไกล</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Prompt:wght@400;600&display=swap" rel="stylesheet">
-<!-- ไลบรารีสำหรับสร้าง QR Code -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<!-- ไลบรารีสำหรับสร้าง PDF (jsPDF) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -63,14 +59,15 @@
 </section>
 
 <section class="screen" id="cert">
+  <!-- กล่องพรีวิว HTML (ถูกซ่อนเมื่อมีรูปพรีวิวจาก canvas แล้ว) -->
   <div class="cert" id="certBox">
     <div><p>สถานีอวกาศแบล็กแจ็ก</p><h2>เกียรติบัตร</h2></div>
     <div><p>ขอมอบให้</p><div class="nm" id="cn"></div></div>
     <p>เพื่อแสดงว่าเป็นผู้ชนะบอทดีลเลอร์ในเกมแบล็กแจ็ก<br>และได้รับยศนักบินอวกาศผู้เชี่ยวชาญแต้ม 21</p>
-    <div class="foot"><p id="cd"></p><div id="qr"></div></div>
+    <div class="foot"><p id="cd"></p></div>
   </div>
-  <p class="hint noprint" id="dlMsg">สแกน QR code บนเกียรติบัตรเพื่อเปิดไฟล์ PDF ได้ทันที</p>
-  <div class="row noprint"><button class="btn" id="dl">ดาวน์โหลดเป็นรูปภาพ</button><button class="btn go" id="pr">บันทึกเป็น PDF / พิมพ์</button><button class="btn alt" id="again3">เล่นอีกรอบ</button></div>
+  <p class="hint noprint" id="dlMsg">กดปุ่มดาวน์โหลดเพื่อบันทึกเกียรติบัตรเป็นไฟล์ .json</p>
+  <div class="row noprint"><button class="btn" id="dl">ดาวน์โหลดเป็นไฟล์ .json</button><button class="btn go" id="pr">บันทึกเป็น PDF / พิมพ์</button><button class="btn alt" id="again3">เล่นอีกรอบ</button></div>
 </section>
 
 <script src="game.js"></script>

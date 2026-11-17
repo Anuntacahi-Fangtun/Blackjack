@@ -18,11 +18,11 @@ function sync(box,cards,hideIdx){
    e.classList.add('fade-in');
    box.appendChild(e);
   } else {
-   const shouldBeBack = isBack;
-   const isCurrentlyBack = ch.classList.contains('back');
-   if(shouldBeBack !== isCurrentlyBack) {
+   const shouldBeBack=isBack;
+   const isCurrentlyBack=ch.classList.contains('back');
+   if(shouldBeBack!==isCurrentlyBack){
     const e=cardEl(c,shouldBeBack);e.classList.add('flip');box.replaceChild(e,ch);
-   } else if(!shouldBeBack && (ch.querySelector('span') && ch.querySelector('span').textContent !== c.r)) {
+   } else if(!shouldBeBack&&(ch.querySelector('span')&&ch.querySelector('span').textContent!==c.r)){
     const e=cardEl(c,false);box.replaceChild(e,ch);
    }
   }
@@ -54,12 +54,12 @@ function finish(res,msg){
  },1600);
 }
 
-function hit(){if(over)return;shownP = Math.min(shownP + 1, P.length);P.push(deck.pop());shownP = P.length;draw();sfx.card();const v=val(P);
+function hit(){if(over)return;P.push(deck.pop());shownP=P.length;draw();sfx.card();const v=val(P);
  if(v>21)finish('lose','แต้มของคุณ '+v+' เกิน 21 คุณแพ้!');else if(v===21)stand()}
 
-function stand(){if(over)return;setBtn(false);over=true;hide=false;shownD = D.length;draw();$('status').textContent='บอทกำลังเล่น...';
+function stand(){if(over)return;setBtn(false);over=true;hide=false;shownD=D.length;draw();$('status').textContent='บอทกำลังเล่น...';
  (function step(){
-  if(val(D)<17){setTimeout(()=>{D.push(deck.pop());shownD = D.length;draw();sfx.card();step()},800);return}
+  if(val(D)<17){setTimeout(()=>{D.push(deck.pop());shownD=D.length;draw();sfx.card();step()},800);return}
   const p=val(P),d=val(D);
   if(d>21)finish('win','บอทแต้มเกิน 21 ('+d+') คุณชนะ!');
   else if(p>d)finish('win','คุณ '+p+' แต้ม ชนะบอท '+d+' แต้ม!');
@@ -67,106 +67,111 @@ function stand(){if(over)return;setBtn(false);over=true;hide=false;shownD = D.le
   else finish('draw','เสมอกัน '+p+' แต้ม');
  })()}
 
+/* ===== เกียรติบัตร ===== */
 let curName='';
 
-window.addEventListener('DOMContentLoaded', () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const certName = urlParams.get('cert');
-  if (certName) {
-    showCertOnly(decodeURIComponent(certName));
-  }
+// ค่าข้อความและสีของเกียรติบัตร ใช้ร่วมกันทั้งตอนวาดพรีวิวและตอนสร้างไฟล์ JSON
+const CERT={
+ issuer:'สถานีอวกาศแบล็กแจ็ก',
+ title:'เกียรติบัตร',
+ presentedTo:'ขอมอบให้',
+ description:[
+  'เพื่อแสดงว่าเป็นผู้ชนะบอทดีลเลอร์ในเกมแบล็กแจ็ก',
+  'และได้รับยศนักบินอวกาศผู้เชี่ยวชาญแต้ม 21'
+ ],
+ canvas:{width:1400,height:990},
+ theme:{
+  background:'#f8fbff',
+  outerBorder:'#0b6a8a',
+  innerBorder:'#ff3df2',
+  titleColor:'#0b6a8a',
+  textColor:'#2b3a66',
+  nameColor:'#0a1030',
+  font:'Prompt, sans-serif'
+ }
+};
+
+window.addEventListener('DOMContentLoaded',()=>{
+ const certName=new URLSearchParams(window.location.search).get('cert');
+ if(certName)showCertOnly(certName);
 });
 
-function showCertOnly(name) {
-  curName = name;
-  show('cert');
-  // ซ่อนกล่องพรีวิว HTML ด้านบนออก ป้องกันการแสดงผลซ้ำซ้อน
-  const certBoxEl = $('certBox');
-  if(certBoxEl) certBoxEl.style.display = 'none';
-  
-  $('dlMsg').textContent = 'นี่คือเกียรติบัตรยืนยันความสำเร็จของคุณ กดปุ่มด้านล่างเพื่อบันทึกรูปภาพได้เลยครับ';
+function showCertOnly(name){
+ curName=name;
+ $('cn').textContent=name;
+ show('cert');
+ $('dlMsg').textContent='กดปุ่มดาวน์โหลดเพื่อบันทึกเกียรติบัตรเป็นไฟล์ .json';
+}
+
+// วาดรูปเกียรติบัตรลง canvas เพื่อใช้เป็นพรีวิวและสำหรับพิมพ์
+function drawCertCanvas(name,dateStr){
+ const T=CERT.theme,W=CERT.canvas.width,H=CERT.canvas.height;
+ const c=document.createElement('canvas');c.width=W;c.height=H;
+ const x=c.getContext('2d');
+
+ x.fillStyle=T.background;x.fillRect(0,0,W,H);
+ x.strokeStyle=T.outerBorder;x.lineWidth=14;x.strokeRect(20,20,W-40,H-40);
+ x.strokeStyle=T.innerBorder;x.lineWidth=3;x.strokeRect(50,50,W-100,H-100);
+
+ // โลโก้ตราสัญลักษณ์
+ x.save();
+ x.translate(W/2,110);
+ x.fillStyle=T.outerBorder;
+ x.beginPath();x.arc(0,0,32,0,Math.PI*2);x.fill();
+ x.strokeStyle=T.innerBorder;x.lineWidth=4;x.stroke();
+ x.fillStyle='#fff';x.font='32px sans-serif';x.textAlign='center';x.textBaseline='middle';
+ x.fillText('★',0,0);
+ x.restore();
+
+ x.textAlign='center';x.textBaseline='alphabetic';
+ x.fillStyle=T.textColor;x.font='400 28px Prompt,sans-serif';x.fillText(CERT.issuer,W/2,175);
+ x.fillStyle=T.titleColor;x.font='600 88px Prompt,sans-serif';x.fillText(CERT.title,W/2,275);
+ x.fillStyle=T.textColor;x.font='400 36px Prompt,sans-serif';x.fillText(CERT.presentedTo,W/2,370);
+
+ let fs=88;x.fillStyle=T.nameColor;x.font='600 '+fs+'px Prompt,sans-serif';
+ while(x.measureText(name).width>W-300&&fs>30){fs-=4;x.font='600 '+fs+'px Prompt,sans-serif'}
+ x.fillText(name,W/2,485);
+
+ const nw=Math.min(x.measureText(name).width+80,W-200);
+ x.fillStyle=T.titleColor;x.fillRect(W/2-nw/2,510,nw,4);
+
+ x.fillStyle=T.textColor;x.font='400 34px Prompt,sans-serif';
+ x.fillText(CERT.description[0],W/2,610);
+ x.fillText(CERT.description[1],W/2,665);
+
+ x.textAlign='left';x.font='400 32px Prompt,sans-serif';
+ x.fillText(dateStr,120,H-110);
+
+ return c;
 }
 
 async function cert(name){
  curName=name;
  $('cn').textContent=name;
- const dateStr = 'วันที่ ' + new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
- $('cd').textContent = dateStr;
+ const dateStr='วันที่ '+new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+ $('cd').textContent=dateStr;
  show('cert');
 
- // ซ่อนกล่องพรีวิว HTML ด้านบน (แก้ปัญหาแสดงผลซ้ำซ้อน 2 อัน)
- const certBoxEl = $('certBox');
- if(certBoxEl) certBoxEl.style.display = 'none';
+ try{
+  try{await document.fonts.load('600 40px Prompt','ก')}catch(e){}
+  const imageUrl=drawCertCanvas(name,dateStr).toDataURL('image/png');
 
- try {
-  const W=1400, H=990, c=document.createElement('canvas');
-  c.width=W; c.height=H; 
-  const x=c.getContext('2d');
-  
-  // พื้นหลังและกรอบหรูหรา
-  x.fillStyle='#f8fbff'; x.fillRect(0,0,W,H);
-  x.strokeStyle='#0b6a8a'; x.lineWidth=14; x.strokeRect(20,20,W-40,H-40);
-  x.strokeStyle='#ff3df2'; x.lineWidth=3; x.strokeRect(50,50,W-100,H-100);
-  
-  // วาดโลโก้ตราสัญลักษณ์อวกาศด้านบนสุด
-  x.save();
-  x.translate(W/2, 110);
-  x.fillStyle='#0b6a8a';
-  x.beginPath();
-  x.arc(0, 0, 32, 0, Math.PI * 2);
-  x.fill();
-  x.strokeStyle='#ff3df2';
-  x.lineWidth=4;
-  x.stroke();
-  // วาดดาวด้านในโลโก้
-  x.fillStyle='#fff';
-  x.font="32px sans-serif";
-  x.textAlign='center';
-  x.textBaseline='middle';
-  x.fillText('★', 0, 0);
-  x.restore();
-
-  // ข้อความหัวเรื่อง
-  x.textAlign='center';
-  x.fillStyle='#2b3a66'; x.font="400 28px Prompt,sans-serif"; x.fillText('สถานีอวกาศแบล็กแจ็ก',W/2,175);
-  x.fillStyle='#0b6a8a'; x.font="600 88px Prompt,sans-serif"; x.fillText('เกียรติบัตร',W/2,275);
-  x.fillStyle='#2b3a66'; x.font="400 36px Prompt,sans-serif"; x.fillText('ขอมอบให้',W/2,370);
-  
-  // ชื่อผู้เล่น
-  let fs=88; x.fillStyle='#0a1030'; x.font='600 '+fs+'px Prompt,sans-serif';
-  while(x.measureText(curName).width>W-300 && fs>30){fs-=4; x.font='600 '+fs+'px Prompt,sans-serif';}
-  x.fillText(curName,W/2,485);
-  
-  const nw=Math.min(x.measureText(curName).width+80, W-200);
-  x.fillStyle='#0b6a8a'; x.fillRect(W/2-nw/2,510,nw,4);
-  
-  // รายละเอียดคำอธิบาย
-  x.fillStyle='#2b3a66'; x.font="400 34px Prompt,sans-serif";
-  x.fillText('เพื่อแสดงว่าเป็นผู้ชนะบอทดีลเลอร์ในเกมแบล็กแจ็ก',W/2,610);
-  x.fillText('และได้รับยศนักบินอวกาศผู้เชี่ยวชาญแต้ม 21',W/2,665);
-  
-  // วันที่ออกเกียรติบัตร
-  x.textAlign='left'; x.font="400 32px Prompt,sans-serif"; 
-  x.fillText(dateStr, 120, H-110);
-
-  // สร้างภาพ PNG จาก Canvas สำหรับแสดงผลและดาวน์โหลด
-  const imageUrl = c.toDataURL('image/png');
   let im=$('certImg');
   if(!im){
-    im=document.createElement('img'); im.id='certImg'; im.alt='เกียรติบัตร'; 
-    im.style.cssText='width:100%;max-width:760px;border-radius:8px;margin-top:10px;box-shadow:0 0 30px #27f0ff44'; 
-    $('dlMsg').after(im);
+   im=document.createElement('img');im.id='certImg';im.alt='เกียรติบัตร';
+   im.style.cssText='width:100%;max-width:760px;border-radius:8px;margin-top:10px;box-shadow:0 0 30px #27f0ff44';
+   $('dlMsg').after(im);
   }
-  im.src = imageUrl;
-  $('dlMsg').textContent = 'สร้างเกียรติบัตรสำเร็จ! กดปุ่มดาวน์โหลดด้านล่างเพื่อเก็บบันทึกรูปภาพได้ทันที';
+  im.src=imageUrl;
 
-  // ซ่อนช่อง QR Code เดิมทิ้งไปเลย
-  const qrBox = $('qr');
-  if(qrBox) qrBox.parentElement.style.display = 'none';
+  // ซ่อนกล่องพรีวิว HTML เพื่อไม่ให้แสดงซ้ำซ้อนกับรูปพรีวิว
+  const certBoxEl=$('certBox');
+  if(certBoxEl)certBoxEl.style.display='none';
 
- } catch(e) {
+  $('dlMsg').textContent='สร้างเกียรติบัตรสำเร็จ! กดปุ่มดาวน์โหลดเพื่อบันทึกเป็นไฟล์ .json';
+ }catch(e){
   console.error(e);
-}
+ }
 }
 
 /* ===== เสียง (Web Audio) ===== */
@@ -223,6 +228,7 @@ $('snd').onclick=()=>{
  $('snd').textContent=muted?'🔇 เสียง: ปิด':'🔊 เสียง: เปิด';
 };
 
+/* ===== ปุ่มต่างๆ ===== */
 $('startBtn').onclick=deal;
 $('hit').onclick=hit;
 $('stand').onclick=stand;
@@ -231,54 +237,34 @@ $('quit').onclick=()=>show('bye');
 $('home').onclick=()=>{history.replaceState(null,'',location.pathname+location.search);show('start')};
 $('pr').onclick=()=>{try{window.print()}catch(e){}};
 
-// ฟังก์ชันดาวน์โหลดภาพเกียรติบัตรที่ปรับแต่งให้สะอาดและคมชัด
-$('dl').onclick=async()=>{
+// ดาวน์โหลดเกียรติบัตรเป็นไฟล์ .json (เก็บเป็นข้อมูลโค้ด ให้เว็บอื่นนำไปประมวลผลเป็นรูป)
+$('dl').onclick=()=>{
  const m=$('dlMsg');
  try{
-  try{await document.fonts.load('600 40px Prompt','ก')}catch(e){}
-  const W=1400,H=990,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
-  
-  x.fillStyle='#f8fbff';x.fillRect(0,0,W,H);
-  x.strokeStyle='#0b6a8a';x.lineWidth=14;x.strokeRect(20,20,W-40,H-40);
-  x.strokeStyle='#ff3df2';x.lineWidth=3;x.strokeRect(50,50,W-100,H-100);
-  
-  // โลโก้ตราสัญลักษณ์บน Canvas ดาวน์โหลด
-  x.save();
-  x.translate(W/2, 110);
-  x.fillStyle='#0b6a8a';
-  x.beginPath(); x.arc(0, 0, 32, 0, Math.PI * 2); x.fill();
-  x.strokeStyle='#ff3df2'; x.lineWidth=4; x.stroke();
-  x.fillStyle='#fff'; x.font="32px sans-serif"; x.textAlign='center'; x.textBaseline='middle';
-  x.fillText('★', 0, 0);
-  x.restore();
-
-  x.textAlign='center';
-  x.fillStyle='#2b3a66';x.font="400 28px Prompt,sans-serif";x.fillText('สถานีอวกาศแบล็กแจ็ก',W/2,175);
-  x.fillStyle='#0b6a8a';x.font="600 88px Prompt,sans-serif";x.fillText('เกียรติบัตร',W/2,275);
-  x.fillStyle='#2b3a66';x.font="400 36px Prompt,sans-serif";x.fillText('ขอมอบให้',W/2,370);
-  
-  let fs=88;x.fillStyle='#0a1030';x.font='600 '+fs+'px Prompt,sans-serif';
-  while(x.measureText(curName).width>W-300&&fs>30){fs-=4;x.font='600 '+fs+'px Prompt,sans-serif'}
-  x.fillText(curName,W/2,485);
-  
-  const nw=Math.min(x.measureText(curName).width+80,W-200);
-  x.fillStyle='#0b6a8a';x.fillRect(W/2-nw/2,510,nw,4);
-  
-  x.fillStyle='#2b3a66';x.font="400 34px Prompt,sans-serif";
-  x.fillText('เพื่อแสดงว่าเป็นผู้ชนะบอทดีลเลอร์ในเกมแบล็กแจ็ก',W/2,610);
-  x.fillText('และได้รับยศนักบินอวกาศผู้เชี่ยวชาญแต้ม 21',W/2,665);
-  
-  x.textAlign='left';x.font="400 32px Prompt,sans-serif";x.fillText($('cd').textContent,120,H-110);
-  
-  const dataUrl=c.toDataURL('image/png');
-  const link=document.createElement('a');
-  link.download=`Blackjack-Certificate-${curName.replace(/\s+/g,'_')}.png`;
-  link.href=dataUrl;
-  link.click();
-  
-  m.textContent='ดาวน์โหลดรูปภาพเกียรติบัตรสำเร็จ!';
+  if(!curName)throw new Error('no name');
+  const data={
+   type:'blackjack-certificate',
+   version:1,
+   recipient:curName,
+   issuedAt:new Date().toISOString(),
+   issuedAtText:$('cd').textContent,
+   issuer:CERT.issuer,
+   title:CERT.title,
+   presentedTo:CERT.presentedTo,
+   description:CERT.description,
+   canvas:CERT.canvas,
+   theme:CERT.theme
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='Blackjack-Certificate-'+curName.replace(/[\\/:*?"<>|\s]+/g,'_')+'.json';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  m.textContent='ดาวน์โหลดไฟล์เกียรติบัตร (.json) สำเร็จ!';
  }catch(e){
-  m.textContent='ไม่สามารถดาวน์โหลดอัตโนมัติได้ ลองใช้วิธีกดค้างที่รูปภาพเพื่อบันทึกแทนได้ครับ';
+  m.textContent='ไม่สามารถสร้างไฟล์ได้ กรุณาลองใหม่อีกครั้ง';
  }
 };
 

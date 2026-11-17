@@ -41,8 +41,6 @@ label{display:block;text-align:left;color:var(--mut);font-size:.9rem;margin-bott
 .cert .nm{font:600 clamp(1.5rem,6vw,2.6rem) 'Prompt',sans-serif;border-bottom:2px solid #0b6a8a;padding:0 24px 4px;word-break:break-word}
 .cert p{color:#2b3a66;font-size:clamp(.8rem,2.4vw,1rem)}
 .cert .foot{display:flex;justify-content:space-between;align-items:flex-end;width:100%;gap:10px}
-#qr{background:#fff;padding:5px;line-height:0}
-#qr img,#qr canvas{width:92px!important;height:92px!important}
 .hint{font-size:.8rem}
 @media(max-width:520px){.card{width:64px;height:94px;font-size:1.05rem}.card .s{font-size:1.5rem}.hand{min-height:104px}}
 #snd{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:20;font:600 .85rem 'Prompt',sans-serif;color:var(--cyan);background:#0b1330ee;border:1.5px solid var(--cyan);border-radius:20px;padding:7px 14px;cursor:pointer;box-shadow:0 0 12px #27f0ff55}
